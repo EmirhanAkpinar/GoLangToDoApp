@@ -94,6 +94,7 @@ type ToDoList struct {
 	UserID          uint       `json:"user_id"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
+	DeletedAt       time.Time  `json:"deleted_at"`
 	Title           string     `json:"title"`
 	CompletePercent int        `json:"percent"`
 	Items           []ToDoItem `json:"items"`
@@ -101,14 +102,14 @@ type ToDoList struct {
 }
 
 type ToDoItem struct {
-	ID         uint       `gorm:"primaryKey"`
-	ToDoListID uint       `json:"todo_list_id"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
-	DeletedAt  *time.Time `json:"deleted_at"`
-	Task       string     `json:"task"`
-	Completed  bool       `json:"completed"`
-	Deleted    bool       `json:"deleted"`
+	ID         uint      `gorm:"primaryKey"`
+	ToDoListID uint      `json:"todo_list_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	DeletedAt  time.Time `json:"deleted_at"`
+	Task       string    `json:"task"`
+	Completed  bool      `json:"completed"`
+	Deleted    bool      `json:"deleted"`
 }
 
 var ToDoLists = []ToDoList{
@@ -195,6 +196,12 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 			if list.ID == uint(id) {
 				//Update the deleted field of the list to true
 				ToDoLists[i].Deleted = true
+				ToDoLists[i].DeletedAt = time.Now()
+				//Update the deleted field of the items to true
+				for j := range ToDoLists[i].Items {
+					ToDoLists[i].Items[j].Deleted = true
+					ToDoLists[i].Items[j].DeletedAt = time.Now()
+				}
 				w.Write([]byte("List deleted successfully"))
 				return
 			}
