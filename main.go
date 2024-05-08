@@ -102,18 +102,18 @@ type ToDoList struct {
 }
 
 type ToDoItem struct {
-	ID         uint      `gorm:"primaryKey"`
-	ToDoListID uint      `json:"todo_list_id"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
-	DeletedAt  time.Time `json:"deleted_at"`
-	Task       string    `json:"task"`
-	Completed  bool      `json:"completed"`
-	Deleted    bool      `json:"deleted"`
+	ID        uint      `gorm:"primaryKey"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	DeletedAt time.Time `json:"deleted_at"`
+	Task      string    `json:"task"`
+	Completed bool      `json:"completed"`
+	Deleted   bool      `json:"deleted"`
 }
 
 var ToDoLists = []ToDoList{
-	{ID: 1, UserID: 1, Title: "ToDoList 1", CompletePercent: 0, Items: []ToDoItem{{ID: 1, ToDoListID: 1, Task: "Task 1", Completed: false, Deleted: false}, {ID: 2, ToDoListID: 1, Task: "Task 2", Completed: false, Deleted: true}}, Deleted: false},
+	{ID: 1, UserID: 1, Title: "ToDoList 1", CompletePercent: 0, Items: []ToDoItem{{ID: 1, Task: "Task 1", Completed: false, Deleted: false}, {ID: 2, Task: "Task 2", Completed: false, Deleted: true}}, Deleted: false},
+	{ID: 2, UserID: 2, Title: "ToDoList 2", CompletePercent: 0, Items: []ToDoItem{{ID: 1, Task: "Task 1", Completed: false, Deleted: false}, {ID: 2, Task: "Task 2", Completed: false, Deleted: true}}, Deleted: false},
 }
 
 func listDetailFunc(w http.ResponseWriter, r *http.Request) {
@@ -194,16 +194,60 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		for i, list := range ToDoLists {
 			if list.ID == uint(id) {
-				//Update the deleted field of the list to true
-				ToDoLists[i].Deleted = true
-				ToDoLists[i].DeletedAt = time.Now()
-				//Update the deleted field of the items to true
-				for j := range ToDoLists[i].Items {
-					ToDoLists[i].Items[j].Deleted = true
-					ToDoLists[i].Items[j].DeletedAt = time.Now()
+				tokenString := r.Header.Get("Authorization")
+				token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+					return mySigningKey, nil
+				})
+				claims := token.Claims.(jwt.MapClaims)
+
+				Username := claims["username"].(string)
+				var userType string
+				var userid uint
+				for _, user := range users {
+					if user.Username == Username {
+						userType = user.Type
+						userid = user.ID
+						break
+					}
 				}
-				w.Write([]byte("List deleted successfully"))
-				return
+				if userType == "1" {
+					for _, list := range ToDoLists {
+						if list.ID == uint(id) {
+							if list.UserID == userid {
+								ToDoLists[i].Deleted = true
+								ToDoLists[i].DeletedAt = time.Now()
+								//Update the deleted field of the items to true
+								for j := range ToDoLists[i].Items {
+									ToDoLists[i].Items[j].Deleted = true
+									ToDoLists[i].Items[j].DeletedAt = time.Now()
+								}
+								w.Write([]byte("List deleted successfully1"))
+								return
+							} else {
+								// 404
+								w.WriteHeader(http.StatusNotFound)
+								return
+							}
+						}
+					}
+				} else if userType == "2" {
+					if list.ID == uint(id) {
+						ToDoLists[i].Deleted = true
+						ToDoLists[i].DeletedAt = time.Now()
+						//Update the deleted field of the items to true
+						for j := range ToDoLists[i].Items {
+							ToDoLists[i].Items[j].Deleted = true
+							ToDoLists[i].Items[j].DeletedAt = time.Now()
+						}
+						w.Write([]byte("List deleted successfully2"))
+						return
+					}
+				} else {
+					// Geçersiz kullanıcı türü durumunda hata mesajı döndürülür.
+					w.WriteHeader(http.StatusBadRequest)
+					w.Write([]byte("Invalid user type"))
+					return
+				}
 			}
 		}
 		w.WriteHeader(http.StatusNotFound)
