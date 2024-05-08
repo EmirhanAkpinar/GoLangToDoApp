@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -155,14 +156,44 @@ func listDetailFunc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func createListFunc(w http.ResponseWriter, r *http.Request) {
+	//Create a new list with the title in the request body
 	var list ToDoList
-	err := json.NewDecoder(r.Body).Decode(&list)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
+
+		w.Write([]byte("Error reading request body"))
 		return
 	}
+
+	err = json.Unmarshal(body, &list)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Error decoding JSON"))
+
+		return
+	}
+	tokenString := r.Header.Get("Authorization")
+	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return mySigningKey, nil
+	})
+	claims := token.Claims.(jwt.MapClaims)
+
+	Username := claims["username"].(string)
+	var userid uint
+	for _, user := range users {
+		if user.Username == Username {
+			userid = user.ID
+			break
+		}
+	}
+	list.ID = uint(len(ToDoLists) + 1)
+	list.UserID = userid
+	list.CreatedAt = time.Now()
+	list.UpdatedAt = time.Now()
+	list.Deleted = false
 	ToDoLists = append(ToDoLists, list)
+
 	w.Write([]byte("List created successfully"))
 }
 
@@ -186,7 +217,7 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If url /list/{listID}/delete then delete list with ID {listID}
 	// After list id
-	if strings.HasSuffix(listID, "/delete") {
+	if strings.HasSuffix(listID, "/delete") && !strings.Contains(listID, "/task/") {
 		listID = strings.TrimSuffix(listID, "/delete")
 		id, err := strconv.Atoi(listID)
 		if err != nil {
@@ -269,18 +300,118 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
 		taskIDParts := strings.Split(r.URL.Path, "/")
 		if len(taskIDParts) < 4 {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		taskID := strings.Join(taskIDParts[4:], "/")
+		if strings.HasSuffix(listID, "/create") {
+			fmt.Println("update")
+			taskID = strings.TrimSuffix(listID, "/create")
+
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			for i, list := range ToDoLists {
+				if list.ID == uint(id) {
+					tokenString := r.Header.Get("Authorization")
+					token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+						return mySigningKey, nil
+					})
+					claims := token.Claims.(jwt.MapClaims)
+
+					Username := claims["username"].(string)
+					var userType string
+					var userid uint
+					for _, user := range users {
+						if user.Username == Username {
+							userType = user.Type
+							userid = user.ID
+							break
+						}
+					}
+					if userType == "1" {
+						for _, list := range ToDoLists {
+							if list.UserID == userid {
+								if list.ID == uint(id) {
+									//Create a new task with the title in request body
+									var task ToDoItem
+									body, err := ioutil.ReadAll(r.Body)
+									if err != nil {
+										w.WriteHeader(http.StatusBadRequest)
+										w.Write([]byte("Error reading request body"))
+										return
+									}
+
+									err = json.Unmarshal(body, &task)
+									if err != nil {
+										w.WriteHeader(http.StatusBadRequest)
+										w.Write([]byte("Error decoding JSON"))
+										return
+									}
+									task.ID = uint(len(list.Items) + 1)
+									task.CreatedAt = time.Now()
+									task.UpdatedAt = time.Now()
+									task.Deleted = false
+									ToDoLists[i].Items = append(ToDoLists[i].Items, task)
+									ToDoLists[i].UpdatedAt = time.Now()
+									w.Write([]byte("Task created successfully"))
+									return
+								}
+							}
+						}
+					} else if userType == "2" {
+						for _, list := range ToDoLists {
+							if list.ID == uint(id) {
+								//Create a new task with the title in request body
+								var task ToDoItem
+								body, err := ioutil.ReadAll(r.Body)
+								if err != nil {
+									w.WriteHeader(http.StatusBadRequest)
+									w.Write([]byte("Error reading request body"))
+									return
+								}
+
+								err = json.Unmarshal(body, &task)
+								if err != nil {
+									w.WriteHeader(http.StatusBadRequest)
+									w.Write([]byte("Error decoding JSON"))
+									return
+								}
+								task.ID = uint(len(list.Items) + 1)
+								task.CreatedAt = time.Now()
+								task.UpdatedAt = time.Now()
+								task.Deleted = false
+
+								ToDoLists[i].Items = append(ToDoLists[i].Items, task)
+
+								ToDoLists[i].UpdatedAt = time.Now()
+								w.Write([]byte("Task created successfully"))
+								return
+							}
+						}
+					} else {
+						// Geçersiz kullanıcı türü durumunda hata mesajı döndürülür.
+						w.WriteHeader(http.StatusBadRequest)
+						w.Write([]byte("Invalid user type"))
+						return
+					}
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		taskID2 := taskIDParts[4]
 		taskid, err := strconv.Atoi(taskID2)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		fmt.Print(taskID)
 		if strings.HasSuffix(taskID, "/delete") {
 			taskID = strings.TrimSuffix(taskID, "/delete")
 			taskid, err := strconv.Atoi(taskID)
@@ -436,6 +567,7 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// If url /list/{listID}/task/{taskid}/update then update task with ID {taskid}
 		if strings.HasSuffix(taskID, "/update") {
+
 			taskID = strings.TrimSuffix(taskID, "/update")
 			taskid, err := strconv.Atoi(taskID)
 			if err != nil {
@@ -526,6 +658,8 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
+
+		// If url /list/{listID}/task/create then create a new task in the list with ID {listID}
 
 		// If url /list/{listID}/task/{taskid} then return task details
 		for _, list := range ToDoLists {
