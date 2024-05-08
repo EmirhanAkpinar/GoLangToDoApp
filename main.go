@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -254,16 +255,344 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If url /list/{listID}/task/{taskid} then return task details
+	if strings.Contains(listID, "/task/") {
+		listID := strings.TrimPrefix(r.URL.Path, "/list/")
+		listIDParts := strings.Split(listID, "/")
+		if len(listIDParts) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		// I messed up the listID and id variables. I will fix it later.
+		id, err := strconv.Atoi(listIDParts[0])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		taskIDParts := strings.Split(r.URL.Path, "/")
+		if len(taskIDParts) < 4 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		taskID := strings.Join(taskIDParts[4:], "/")
+		taskID2 := taskIDParts[4]
+		taskid, err := strconv.Atoi(taskID2)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if strings.HasSuffix(taskID, "/delete") {
+			taskID = strings.TrimSuffix(taskID, "/delete")
+			taskid, err := strconv.Atoi(taskID)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			for i, list := range ToDoLists {
+				if list.ID == uint(id) {
+					tokenString := r.Header.Get("Authorization")
+					token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+						return mySigningKey, nil
+					})
+					claims := token.Claims.(jwt.MapClaims)
+
+					Username := claims["username"].(string)
+					var userType string
+					var userid uint
+					for _, user := range users {
+						if user.Username == Username {
+							userType = user.Type
+							userid = user.ID
+							break
+						}
+					}
+					if userType == "1" {
+						for _, list := range ToDoLists {
+							if list.UserID == userid {
+								if list.ID == uint(id) {
+									for j, item := range list.Items {
+										if item.ID == uint(taskid) {
+											ToDoLists[i].Items[j].Deleted = true
+
+											ToDoLists[i].Items[j].DeletedAt = time.Now()
+											w.Write([]byte("Task deleted successfully"))
+											return
+										}
+									}
+								}
+							}
+						}
+					} else if userType == "2" {
+						for _, list := range ToDoLists {
+							if list.ID == uint(id) {
+
+								for j, item := range list.Items {
+									if item.ID == uint(taskid) {
+										ToDoLists[i].Items[j].Deleted = true
+										ToDoLists[i].Items[j].DeletedAt = time.Now()
+										w.Write([]byte("Task deleted successfully"))
+										return
+									}
+								}
+							}
+						}
+					} else {
+						// Geçersiz kullanıcı türü durumunda hata mesajı döndürülür.
+						w.WriteHeader(http.StatusBadRequest)
+						w.Write([]byte("Invalid user type"))
+						return
+					}
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		// If url /list/{listID}/task/{taskid}/complete then complete task with ID {taskid}
+		if strings.HasSuffix(taskID, "/complete") {
+			taskID = strings.TrimSuffix(taskID, "/complete")
+			taskid, err := strconv.Atoi(taskID)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			for i, list := range ToDoLists {
+				if list.ID == uint(id) {
+					tokenString := r.Header.Get("Authorization")
+					token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+						return mySigningKey, nil
+					})
+					claims := token.Claims.(jwt.MapClaims)
+
+					Username := claims["username"].(string)
+					var userType string
+					var userid uint
+					for _, user := range users {
+						if user.Username == Username {
+							userType = user.Type
+							userid = user.ID
+							break
+						}
+					}
+					if userType == "1" {
+						for _, list := range ToDoLists {
+							if list.UserID == userid {
+								if list.ID == uint(id) {
+									for j, item := range list.Items {
+										if item.ID == uint(taskid) {
+											ToDoLists[i].Items[j].Completed = true
+											ToDoLists[i].Items[j].UpdatedAt = time.Now()
+											ToDoLists[i].UpdatedAt = time.Now()
+											//Calculate the percentage of completed tasks
+											var completedCount int
+											for _, item := range list.Items {
+												if item.Completed {
+													completedCount++
+												}
+											}
+											ToDoLists[i].CompletePercent = (completedCount * 100) / len(list.Items)
+
+											w.Write([]byte("Task completed successfully"))
+											return
+										}
+
+									}
+								}
+							}
+
+						}
+					} else if userType == "2" {
+						for _, list := range ToDoLists {
+							if list.ID == uint(id) {
+								for j, item := range list.Items {
+									if item.ID == uint(taskid) {
+										ToDoLists[i].Items[j].Completed = true
+										ToDoLists[i].Items[j].UpdatedAt = time.Now()
+										ToDoLists[i].UpdatedAt = time.Now()
+										//Calculate the percentage of completed tasks
+										var completedCount int
+										for _, item := range list.Items {
+											if item.Completed {
+												completedCount++
+											}
+										}
+										ToDoLists[i].CompletePercent = (completedCount * 100) / len(list.Items)
+										w.Write([]byte("Task completed successfully"))
+										return
+									}
+								}
+							}
+						}
+					} else {
+						// Geçersiz kullanıcı türü durumunda hata mesajı döndürülür.
+						w.WriteHeader(http.StatusBadRequest)
+						w.Write([]byte("Invalid user type"))
+						return
+					}
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		// If url /list/{listID}/task/{taskid}/update then update task with ID {taskid}
+		if strings.HasSuffix(taskID, "/update") {
+			taskID = strings.TrimSuffix(taskID, "/update")
+			taskid, err := strconv.Atoi(taskID)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			for i, list := range ToDoLists {
+				if list.ID == uint(id) {
+					tokenString := r.Header.Get("Authorization")
+					token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+						return mySigningKey, nil
+					})
+					claims := token.Claims.(jwt.MapClaims)
+
+					Username := claims["username"].(string)
+					var userType string
+					var userid uint
+					for _, user := range users {
+						if user.Username == Username {
+							userType = user.Type
+							userid = user.ID
+							break
+						}
+					}
+					if userType == "1" {
+						for _, list := range ToDoLists {
+							if list.UserID == userid {
+								if list.ID == uint(id) {
+									for j, item := range list.Items {
+										if item.ID == uint(taskid) {
+											//Update the task.Task field with the new value in the request body
+											var task ToDoItem
+											body, err := ioutil.ReadAll(r.Body)
+											if err != nil {
+												w.WriteHeader(http.StatusBadRequest)
+												w.Write([]byte("Error reading request body"))
+												return
+											}
+
+											err = json.Unmarshal(body, &task)
+											if err != nil {
+												w.WriteHeader(http.StatusBadRequest)
+												w.Write([]byte("Error decoding JSON"))
+												return
+											}
+											ToDoLists[i].Items[j].Task = task.Task
+											ToDoLists[i].Items[j].UpdatedAt = time.Now()
+											ToDoLists[i].UpdatedAt = time.Now()
+											w.Write([]byte("Task updated successfully"))
+											return
+										}
+									}
+								}
+							}
+						}
+					} else if userType == "2" {
+						for _, list := range ToDoLists {
+							if list.ID == uint(id) {
+								for j, item := range list.Items {
+									if item.ID == uint(taskid) {
+										//Update the task.Task field with the new value in the request body
+										var task ToDoItem
+										body, err := ioutil.ReadAll(r.Body)
+										if err != nil {
+											w.WriteHeader(http.StatusBadRequest)
+											w.Write([]byte("Error reading request body"))
+											return
+										}
+
+										err = json.Unmarshal(body, &task)
+										if err != nil {
+											w.WriteHeader(http.StatusBadRequest)
+											w.Write([]byte("Error decoding JSON"))
+											return
+										}
+										ToDoLists[i].Items[j].Task = task.Task
+										ToDoLists[i].Items[j].UpdatedAt = time.Now()
+										ToDoLists[i].UpdatedAt = time.Now()
+										w.Write([]byte("Task updated successfully"))
+										return
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		// If url /list/{listID}/task/{taskid} then return task details
+		for _, list := range ToDoLists {
+			if list.ID == uint(id) {
+				tokenString := r.Header.Get("Authorization")
+				token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+					return mySigningKey, nil
+				})
+				claims := token.Claims.(jwt.MapClaims)
+
+				Username := claims["username"].(string)
+				var userType string
+				var userid uint
+				for _, user := range users {
+					if user.Username == Username {
+						userType = user.Type
+						userid = user.ID
+						break
+					}
+				}
+				if userType == "1" {
+					for _, list := range ToDoLists {
+						if list.UserID == userid {
+							if list.ID == uint(id) {
+								for _, item := range list.Items {
+									if item.ID == uint(taskid) {
+										response, _ := json.Marshal(item)
+										w.Write(response)
+										return
+									}
+								}
+							}
+						}
+
+					}
+				} else if userType == "2" {
+					for _, list := range ToDoLists {
+						if list.ID == uint(id) {
+							for _, item := range list.Items {
+								if item.ID == uint(taskid) {
+									response, _ := json.Marshal(item)
+									w.Write(response)
+									return
+								}
+							}
+						}
+					}
+				} else {
+					// Geçersiz kullanıcı türü durumunda hata mesajı döndürülür.
+					w.WriteHeader(http.StatusBadRequest)
+					w.Write([]byte("Invalid user type"))
+					return
+				}
+			}
+		}
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	// If url /list/{listID} then return list details
 	id, err := strconv.Atoi(listID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	for _, list := range ToDoLists {
 		if list.ID == uint(id) {
-			// If userType is 1 then return only user1's list if userType is 2 then return all lists
 			tokenString := r.Header.Get("Authorization")
 			token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 				return mySigningKey, nil
@@ -311,32 +640,11 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func createTaskHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Creating a new task..."))
-}
-
-func completeTaskHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Completing task..."))
-}
-
-func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Updating task..."))
-}
-
-func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Deleting task..."))
-}
-
 func handleRequests() {
 
 	http.HandleFunc("/login", login)
 	//
 	http.HandleFunc("/list/", isAuthenticated(listHandler))
-	//
-	http.HandleFunc("/list/task/create", isAuthenticated(createTaskHandler))
-	http.HandleFunc("/list/task/update", isAuthenticated(updateTaskHandler))
-	http.HandleFunc("/list/task/complete", isAuthenticated(completeTaskHandler))
-	http.HandleFunc("/list/task/delete", isAuthenticated(deleteTaskHandler))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
