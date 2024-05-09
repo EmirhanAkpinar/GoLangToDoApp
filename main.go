@@ -14,8 +14,6 @@ import (
 
 var mySigningKey = []byte("privia")
 
-//print my signing key
-
 type Credentials struct {
 	ID       uint   `gorm:"primaryKey"`
 	Username string `json:"username"`
@@ -113,7 +111,7 @@ type ToDoItem struct {
 
 var ToDoLists = []ToDoList{
 	{ID: 1, UserID: 1, Title: "ToDoList 1", CompletePercent: 0, Items: []ToDoItem{{ID: 1, Task: "Task 1", Completed: false, Deleted: false}, {ID: 2, Task: "Task 2", Completed: false, Deleted: true}}, Deleted: false},
-	{ID: 2, UserID: 2, Title: "ToDoList 2", CompletePercent: 0, Items: []ToDoItem{{ID: 1, Task: "Task 1", Completed: false, Deleted: false}, {ID: 2, Task: "Task 2", Completed: false, Deleted: true}}, Deleted: false},
+	{ID: 2, UserID: 1, Title: "ToDoList 2", CompletePercent: 0, Items: []ToDoItem{{ID: 1, Task: "Task 1", Completed: false, Deleted: false}, {ID: 2, Task: "Task 2", Completed: false, Deleted: true}}, Deleted: false},
 }
 
 func listDetailFunc(w http.ResponseWriter, r *http.Request) {
@@ -283,7 +281,7 @@ func deleteListFunc(w http.ResponseWriter, r *http.Request, listID string) {
 								ToDoLists[i].Items[j].Deleted = true
 								ToDoLists[i].Items[j].DeletedAt = time.Now()
 							}
-							w.Write([]byte("List deleted successfully1"))
+							w.Write([]byte("List deleted successfully"))
 							return
 						} else {
 							// 404
@@ -301,7 +299,7 @@ func deleteListFunc(w http.ResponseWriter, r *http.Request, listID string) {
 						ToDoLists[i].Items[j].Deleted = true
 						ToDoLists[i].Items[j].DeletedAt = time.Now()
 					}
-					w.Write([]byte("List deleted successfully2"))
+					w.Write([]byte("List deleted successfully"))
 					return
 				}
 			} else {
