@@ -135,14 +135,18 @@ func listDetailFunc(w http.ResponseWriter, r *http.Request) {
 	if userType == "1" {
 		for _, list := range ToDoLists {
 			if list.UserID == userid {
-				response, _ := json.Marshal(list)
-				w.Write(response)
+				if !list.Deleted {
+					response, _ := json.Marshal(list)
+					w.Write(response)
+				}
 			}
 		}
 	} else if userType == "2" {
 		for _, list := range ToDoLists {
-			response, _ := json.Marshal(list)
-			w.Write(response)
+			if !list.Deleted {
+				response, _ := json.Marshal(list)
+				w.Write(response)
+			}
 		}
 	} else {
 		// Geçersiz kullanıcı türü durumunda hata mesajı döndürülür.
@@ -220,19 +224,23 @@ func todoListFunc(w http.ResponseWriter, r *http.Request, listID string) {
 			if userType == "1" {
 				for _, list := range ToDoLists {
 					if list.UserID == userid {
-						if list.ID == uint(id) {
-							response, _ := json.Marshal(list)
-							w.Write(response)
-							return
+						if !list.Deleted {
+							if list.ID == uint(id) {
+								response, _ := json.Marshal(list)
+								w.Write(response)
+								return
+							}
 						}
 					}
 				}
 			} else if userType == "2" {
 				for _, list := range ToDoLists {
-					if list.ID == uint(id) {
-						response, _ := json.Marshal(list)
-						w.Write(response)
-						return
+					if !list.Deleted {
+						if list.ID == uint(id) {
+							response, _ := json.Marshal(list)
+							w.Write(response)
+							return
+						}
 					}
 				}
 			} else {
@@ -454,12 +462,12 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 	// If url /list/{listID}/task/create then create a new task in the list with ID {listID}
 
 	// If url /list/{listID}/task/{taskid} then return task details
-	taskDetailFunc(w, r, taskID, taskid, id)
+	taskDetailFunc(w, r, taskid, id)
 	w.WriteHeader(http.StatusNotFound)
 	return
 }
 
-func taskDetailFunc(w http.ResponseWriter, r *http.Request, taskID string, taskid int, id int) {
+func taskDetailFunc(w http.ResponseWriter, r *http.Request, taskid int, id int) {
 	for _, list := range ToDoLists {
 		if list.ID == uint(id) {
 			tokenString := r.Header.Get("Authorization")
@@ -483,10 +491,12 @@ func taskDetailFunc(w http.ResponseWriter, r *http.Request, taskID string, taski
 					if list.UserID == userid {
 						if list.ID == uint(id) {
 							for _, item := range list.Items {
-								if item.ID == uint(taskid) {
-									response, _ := json.Marshal(item)
-									w.Write(response)
-									return
+								if !item.Deleted {
+									if item.ID == uint(taskid) {
+										response, _ := json.Marshal(item)
+										w.Write(response)
+										return
+									}
 								}
 							}
 						}
@@ -497,10 +507,12 @@ func taskDetailFunc(w http.ResponseWriter, r *http.Request, taskID string, taski
 				for _, list := range ToDoLists {
 					if list.ID == uint(id) {
 						for _, item := range list.Items {
-							if item.ID == uint(taskid) {
-								response, _ := json.Marshal(item)
-								w.Write(response)
-								return
+							if !item.Deleted {
+								if item.ID == uint(taskid) {
+									response, _ := json.Marshal(item)
+									w.Write(response)
+									return
+								}
 							}
 						}
 					}
