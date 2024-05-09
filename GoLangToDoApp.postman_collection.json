@@ -1,0 +1,225 @@
+{
+	"info": {
+		"_postman_id": "ec812383-25fa-4bfe-b697-8aff427770b3",
+		"name": "GoLangToDoApp",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18749239",
+		"_collection_link": "https://planetary-capsule-918131.postman.co/workspace/New-Team-Workspace~d6fdd559-1a25-420d-960d-94be7ed28594/collection/18749239-ec812383-25fa-4bfe-b697-8aff427770b3?action=share&source=collection_link&creator=18749239"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"Username\": \"user1\",\r\n    \"Password\": \"password1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/login",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Show All Lists",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAwNTk5fQ.WLgQy1E4gUNO-J6-D_3c4xhMTXAeXpRyBiUb8pZneMk",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/list",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Show List Tasks",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAwNTk5fQ.WLgQy1E4gUNO-J6-D_3c4xhMTXAeXpRyBiUb8pZneMk",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/list/1",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Task Create",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAxODUzfQ.qxjqyu0QpWcmywr-g6fHm7082_oWg9zNTsZm0-BITac",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"Task\": \"Task1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/list/1/task/create",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list",
+						"1",
+						"task",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Task Update",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAxODUzfQ.qxjqyu0QpWcmywr-g6fHm7082_oWg9zNTsZm0-BITac",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"Task\": \"Task12\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/list/1/task/1/update",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list",
+						"1",
+						"task",
+						"1",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Task Delete",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAxODUzfQ.qxjqyu0QpWcmywr-g6fHm7082_oWg9zNTsZm0-BITac",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/list/1/task/1/delete",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list",
+						"1",
+						"task",
+						"1",
+						"delete"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Task Complete",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAxODUzfQ.qxjqyu0QpWcmywr-g6fHm7082_oWg9zNTsZm0-BITac",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/list/1/task/1/complete",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list",
+						"1",
+						"task",
+						"1",
+						"complete"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
