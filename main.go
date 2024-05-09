@@ -37,7 +37,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 	var creds Credentials
 	err := json.NewDecoder(r.Body).Decode(&creds)
 	if err != nil {
-		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -315,6 +314,95 @@ func deleteListFunc(w http.ResponseWriter, r *http.Request, listID string) {
 	}
 	w.WriteHeader(http.StatusNotFound)
 	return
+}
+func updateListFunc(w http.ResponseWriter, r *http.Request, listID string) {
+	listID = strings.TrimSuffix(listID, "/update")
+	id, err := strconv.Atoi(listID)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	for _, list := range ToDoLists {
+		if list.ID == uint(id) {
+			tokenString := r.Header.Get("Authorization")
+			token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+				return mySigningKey, nil
+			})
+			claims := token.Claims.(jwt.MapClaims)
+
+			Username := claims["username"].(string)
+			var userType string
+			var userid uint
+			for _, user := range users {
+				if user.Username == Username {
+					userType = user.Type
+					userid = user.ID
+					break
+				}
+			}
+			if userType == "1" {
+				for _, list := range ToDoLists {
+					if list.ID == uint(id) {
+						if list.UserID == userid {
+							//Update the task.Task field with the new value in the request body
+							var task ToDoList
+							body, err := ioutil.ReadAll(r.Body)
+							if err != nil {
+								w.WriteHeader(http.StatusBadRequest)
+								w.Write([]byte("Error reading request body"))
+								return
+							}
+
+							err = json.Unmarshal(body, &task)
+							if err != nil {
+								w.WriteHeader(http.StatusBadRequest)
+								w.Write([]byte("Error decoding JSON"))
+								return
+							}
+							list.Title = task.Title
+							list.UpdatedAt = time.Now()
+							w.Write([]byte("List updated successfully"))
+							return
+						} else {
+							// 404
+							w.WriteHeader(http.StatusNotFound)
+							return
+						}
+					}
+				}
+			} else if userType == "2" {
+				if list.ID == uint(id) {
+					//Update the task.Task field with the new value in the request body
+					var task ToDoList
+					body, err := ioutil.ReadAll(r.Body)
+					if err != nil {
+						w.WriteHeader(http.StatusBadRequest)
+						w.Write([]byte("Error reading request body"))
+						return
+					}
+
+					err = json.Unmarshal(body, &task)
+					if err != nil {
+						w.WriteHeader(http.StatusBadRequest)
+						w.Write([]byte("Error decoding JSON"))
+						return
+					}
+					list.Title = task.Title
+					list.UpdatedAt = time.Now()
+					w.Write([]byte("List updated successfully"))
+					return
+				}
+			} else {
+				// Geçersiz kullanıcı türü durumunda hata mesajı döndürülür.
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte("Invalid user type"))
+				return
+			}
+		}
+	}
+	w.WriteHeader(http.StatusNotFound)
+	return
+
 }
 
 func taskHandler(w http.ResponseWriter, r *http.Request) {
@@ -786,6 +874,10 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.HasSuffix(listID, "/delete") && !strings.Contains(listID, "/task/") {
 		deleteListFunc(w, r, listID)
+		return
+	}
+	if strings.HasSuffix(listID, "/update") && !strings.Contains(listID, "/task/") {
+		updateListFunc(w, r, listID)
 		return
 	}
 
