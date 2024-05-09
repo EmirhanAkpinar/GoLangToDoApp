@@ -62,25 +62,88 @@
 			"response": []
 		},
 		{
-			"name": "Show List Tasks",
+			"name": "Create A List",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"method": "GET",
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAwNTk5fQ.WLgQy1E4gUNO-J6-D_3c4xhMTXAeXpRyBiUb8pZneMk",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1Mjg1MDAxfQ.pQKNgc4x2qm0nUfpEnSeWBVGMgswisdDBTVS2fxEsEI",
 						"type": "text"
 					}
 				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"Title\": \"Emirhan\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "localhost:8080/list/1",
+					"raw": "localhost:8080/list/create",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
 						"list",
-						"1"
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete A List",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1Mjg1MDAxfQ.pQKNgc4x2qm0nUfpEnSeWBVGMgswisdDBTVS2fxEsEI",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/list/1/delete",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list",
+						"1",
+						"delete"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Show List Tasks",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1Mjg0OTI3fQ.XS4e874oHG_byechpI9awcaVguOTGBuxVeawRsufeDU",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/list/3",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list",
+						"3"
 					]
 				}
 			},
@@ -96,7 +159,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAxODUzfQ.qxjqyu0QpWcmywr-g6fHm7082_oWg9zNTsZm0-BITac",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1Mjg1MDAxfQ.pQKNgc4x2qm0nUfpEnSeWBVGMgswisdDBTVS2fxEsEI",
 						"type": "text"
 					}
 				],
@@ -110,14 +173,14 @@
 					}
 				},
 				"url": {
-					"raw": "localhost:8080/list/1/task/create",
+					"raw": "localhost:8080/list/3/task/create",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
 						"list",
-						"1",
+						"3",
 						"task",
 						"create"
 					]
@@ -135,7 +198,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAxODUzfQ.qxjqyu0QpWcmywr-g6fHm7082_oWg9zNTsZm0-BITac",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1Mjg1MDAxfQ.pQKNgc4x2qm0nUfpEnSeWBVGMgswisdDBTVS2fxEsEI",
 						"type": "text"
 					}
 				],
@@ -149,14 +212,14 @@
 					}
 				},
 				"url": {
-					"raw": "localhost:8080/list/1/task/1/update",
+					"raw": "localhost:8080/list/3/task/1/update",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
 						"list",
-						"1",
+						"3",
 						"task",
 						"1",
 						"update"
@@ -200,19 +263,19 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1MjAxODUzfQ.qxjqyu0QpWcmywr-g6fHm7082_oWg9zNTsZm0-BITac",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNzE1Mjg1MDAxfQ.pQKNgc4x2qm0nUfpEnSeWBVGMgswisdDBTVS2fxEsEI",
 						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "localhost:8080/list/1/task/1/complete",
+					"raw": "localhost:8080/list/3/task/1/complete",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
 						"list",
-						"1",
+						"3",
 						"task",
 						"1",
 						"complete"
